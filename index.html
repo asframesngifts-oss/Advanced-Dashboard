@@ -123,6 +123,7 @@ function checkPw(){
   if(val==='Asframes@2024'){
     document.getElementById('lockScreen').style.display='none';
     localStorage.setItem('asf_auth','1');
+    resetIdle();
   } else {
     document.getElementById('pwError').style.display='block';
     document.getElementById('pwInput').value='';
@@ -694,6 +695,7 @@ function logout(){
 }
 
 function doLock(){
+  clearTimeout(idleTimer);
   localStorage.removeItem('asf_auth');
   document.getElementById('lockScreen').style.display='flex';
   document.getElementById('pwInput').value='';

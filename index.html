@@ -687,18 +687,38 @@ updateStats();
 </div>
 
 <script>
-  function logout(){
-  if(!confirm('Logout from AS Frames?')) return;
-  localStorage.removeItem('asf_auth');
-  document.getElementById('lockScreen').style.display='flex';
-}
+
 function logout(){
   if(!confirm('Logout from AS Frames?')) return;
+  doLock();
+}
+
+function doLock(){
   localStorage.removeItem('asf_auth');
   document.getElementById('lockScreen').style.display='flex';
   document.getElementById('pwInput').value='';
   document.getElementById('pwError').style.display='none';
 }
+
+// ─── AUTO LOCK AFTER 10 MINUTES IDLE ─────────────────────
+var idleTimer;
+var IDLE_MINUTES = 10; // change this to any number you want
+
+function resetIdle(){
+  clearTimeout(idleTimer);
+  if(localStorage.getItem('asf_auth') !== '1') return;
+  idleTimer = setTimeout(() => {
+    doLock();
+  }, IDLE_MINUTES * 60 * 1000);
+}
+
+// Listen for any user activity
+['mousemove','mousedown','keydown','touchstart','scroll','click'].forEach(evt => {
+  document.addEventListener(evt, resetIdle, true);
+});
+
+// Start the timer
+resetIdle();
 </script>
 <!-- Customer Khata Modal -->
 <div class="overlay" id="khataModal">

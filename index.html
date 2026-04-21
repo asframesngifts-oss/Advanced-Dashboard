@@ -113,12 +113,7 @@ tbody td{padding:8px 10px;vertical-align:middle}
   <div style="background:#fff;border:0.5px solid rgba(0,0,0,0.1);border-radius:16px;padding:2.5rem 2rem;width:90%;max-width:340px;text-align:center">
     <div style="font-size:22px;font-weight:600;margin-bottom:.25rem">AS <span style="color:#D85A30">Frames</span></div>
     <div style="font-size:13px;color:#6b6a65;margin-bottom:1.5rem">Enter password to continue</div>
-    <input id="pwInput" type="password" placeholder="Password"
-style="width:100%;padding:10px 14px;border:0.5px solid rgba(0,0,0,0.18);border-radius:10px;font-size:15px;text-align:center;margin-bottom:.75rem;background:#fff;color:#1a1a18"
-onkeydown="if(event.key==='Enter')checkPw()">
-    <button onclick="checkPw()" style="width:100%;padding:10px;background:#D85A30;color:#fff;border:none;border-radius:10px;margin-top:6px;cursor:pointer">
-  Unlock
-</button>
+    <input id="pwInput" type="password" placeholder="Password" autocomplete="off" style="width:100%;padding:10px 14px;border:0.5px solid rgba(0,0,0,0.18);border-radius:10px;font-size:15px;text-align:center;margin-bottom:.75rem;background:#fff;color:#1a1a18" onkeydown="if(event.key==='Enter')checkPw()">    <button onclick="checkPw()" style="width:100%;padding:10px;background:#D85A30;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:500;cursor:pointer">Unlock</button>
     <div id="pwError" style="color:#993C1D;font-size:12px;margin-top:.6rem;display:none">Incorrect password. Try again.</div>
   </div>
 </div>
@@ -136,7 +131,6 @@ function checkPw(){
 }
 if(localStorage.getItem('asf_auth')==='1'){
   document.getElementById('lockScreen').style.display='none';
-  startIdleTimer();
 }
 </script>
 <div class="alert-bar" id="alertBar">
@@ -165,8 +159,9 @@ if(localStorage.getItem('asf_auth')==='1'){
       <span id="syncLabel">Not connected</span>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn" onclick="syncFromSheet()" title="Pull latest orders from Google Sheet">↻ Sync</button>
-      <button class="btn" onclick="logout()">Logout</button>
+     <button class="btn" onclick="syncFromSheet()" title="Pull latest orders from Google Sheet">↻ Sync</button>
+     <button class="btn" style="border-color:#993C1D;color:#993C1D" onclick="logout()">Logout</button>
+      
     <button class="btn" style="border-color:#534AB7;color:#534AB7" onclick="openKhata()">Customer Khata</button>
       <button class="btn primary" onclick="openModal('add')">+ New Order</button>
     </div>
@@ -191,7 +186,7 @@ if(localStorage.getItem('asf_auth')==='1'){
   <div class="table-wrap">
     <table>
       <thead><tr>
-        <th>#</th><th>Customer</th><th>Phone</th><th>Size</th><th>Status</th>
+        <th>#</th><th>Customer</th><th>Phone</th><th>Size</th><th>Qty</th><th>Type</th><th>Status</th>
         <th>Amount</th><th>Advance</th><th>Balance</th><th>Last msg</th><th>Actions</th>
       </tr></thead>
       <tbody id="tbody"></tbody>
@@ -203,10 +198,31 @@ if(localStorage.getItem('asf_auth')==='1'){
 <div class="overlay" id="addModal">
 <div class="modal">
   <h2>New order</h2>
-  <div class="frow"><label>Customer name</label><input id="f_name" type="text" placeholder="Ravi Kumar"></div>
-  <div class="frow"><label>WhatsApp number (with country code)</label><input id="f_phone" type="text" placeholder="919876543210"></div>
+  <div class="frow" style="position:relative">
+  <label>Customer name</label>
+  <input id="f_name" type="text" placeholder="Ravi Kumar" autocomplete="off" oninput="custSearch(this.value)" onblur="setTimeout(()=>hideSug(),200)">
+  <div id="custSug" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:0.5px solid var(--border2);border-radius:var(--radius);z-index:999;max-height:200px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.12)"></div>
+</div>
+<div class="frow"><label>WhatsApp number (with country code)</label>
+  <input id="f_phone" type="text" placeholder="919876543210" autocomplete="off">
+</div>
   <div class="frow"><label>Frame size</label>
-    <select id="f_size"><option>4×6</option><option>5×7</option><option>8×10</option><option>10×12</option><option>12×16</option><option>16×20</option><option>Custom</option></select>
+    <select id="f_size" onchange="toggleCustomSize('f')">
+  <option>6×8</option><option>8×12</option><option>12×18</option>
+  <option>16×20</option><option>20×24</option><option>20×30</option>
+  <option>Custom</option>
+</select>
+<div id="f_custom_size" style="display:none;margin-top:6px">
+  <input id="f_custom_size_val" type="text" placeholder="Enter size e.g. 18×24">
+</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div class="frow"><label>Quantity</label><input id="f_qty" type="number" placeholder="1" min="1" value="1"></div>
+    <div class="frow"><label>Frame type (inches)</label>
+      <select id="f_ftype">
+        <option>1</option><option>1.5</option><option>2</option><option>3</option>
+      </select>
+    </div>
   </div>
   <div class="frow"><label>Notes / design instructions</label><textarea id="f_notes" placeholder="Background colour, text, special requests…"></textarea></div>
   <div class="frow"><label>Reference photo (optional)</label><input id="f_photo" type="file" accept="image/*"></div>
@@ -230,13 +246,28 @@ if(localStorage.getItem('asf_auth')==='1'){
   <div class="frow"><label>Customer name</label><input id="e_name" type="text"></div>
   <div class="frow"><label>WhatsApp number</label><input id="e_phone" type="text"></div>
   <div class="frow"><label>Frame size</label>
-    <select id="e_size"><option>4×6</option><option>5×7</option><option>8×10</option><option>10×12</option><option>12×16</option><option>16×20</option><option>Custom</option></select>
+    <select id="e_size" onchange="toggleCustomSize('e')">
+  <option>6×8</option><option>8×12</option><option>12×18</option>
+  <option>16×20</option><option>20×24</option><option>20×30</option>
+  <option>Custom</option>
+</select>
+<div id="e_custom_size" style="display:none;margin-top:6px">
+  <input id="e_custom_size_val" type="text" placeholder="Enter size e.g. 18×24">
+</div>
   </div>
   <div class="frow"><label>Status <small style="color:var(--text2)">(changing status auto-sends WhatsApp)</small></label>
     <select id="e_status">
       <option>New</option><option>Designing</option><option>Sent for Review</option>
       <option>Approved</option><option>Printing</option><option>Ready</option><option>Delivered</option>
     </select>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div class="frow"><label>Quantity</label><input id="e_qty" type="number" placeholder="1" min="1" value="1"></div>
+    <div class="frow"><label>Frame type (inches)</label>
+      <select id="e_ftype">
+        <option>1</option><option>1.5</option><option>2</option><option>3</option>
+      </select>
+    </div>
   </div>
   <div class="frow"><label>Notes</label><textarea id="e_notes"></textarea></div>
 
@@ -254,7 +285,8 @@ if(localStorage.getItem('asf_auth')==='1'){
 
 <script>
 // ─── CONFIG ───────────────────────────────────────────────
-var WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxfF006DpIXaCkMOSzLaSZ7q51aUR1Kw1xijmrZyYQaNbyhvYbf27vjj8w6xvdRVocCjg/exec';
+var WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyJrB5z-dx4Ajc2GS9UtH86ZyzErJWAJ75ahuc7PNvSn60hUigZcxA69-vIBioPBo2OIQ/exec';
+
 // ──────────────────────────────────────────────────────────
 
 const WA_MSGS = {
@@ -359,9 +391,63 @@ function calcBal(p) {
 }
 
 // ─── MODALS ───────────────────────────────────────────────
-function openModal(id) { document.getElementById(id+'Modal').classList.add('open'); }
-function closeModal(id) { document.getElementById(id+'Modal').classList.remove('open'); }
+function openModal(id) {
+  document.getElementById(id+'Modal').classList.add('open');
+  if (id === 'add') setTimeout(() => document.getElementById('f_name').focus(), 100);
+}
 
+function custSearch(val) {
+  const sug = document.getElementById('custSug');
+  const q = val.trim().toLowerCase();
+  if (!q) { sug.style.display = 'none'; return; }
+  const seen = {};
+  orders.forEach(o => {
+    if (!o.phone) return;
+    const key = o.phone;
+    if (!seen[key]) seen[key] = { name: o.name, phone: o.phone, count: 0 };
+    seen[key].count++;
+  });
+  const matches = Object.values(seen).filter(c =>
+    c.name.toLowerCase().includes(q) || c.phone.includes(q)
+  );
+  if (!matches.length) { sug.style.display = 'none'; return; }
+  sug.innerHTML = matches.map(c => `
+    <div onclick="pickCust('${c.name.replace(/'/g,"\\'")}','${c.phone}')"
+      style="padding:9px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:0.5px solid var(--border);font-size:13px"
+      onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+      <div>
+        <span style="font-weight:500">${c.name}</span>
+        <span style="font-size:11px;color:var(--text2);margin-left:6px">${c.phone}</span>
+      </div>
+      <span style="font-size:10px;color:var(--text2);background:var(--surface2);padding:2px 7px;border-radius:999px">${c.count} order${c.count>1?'s':''}</span>
+    </div>
+  `).join('');
+  sug.style.display = 'block';
+}
+
+function pickCust(name, phone) {
+  document.getElementById('f_name').value = name;
+  document.getElementById('f_phone').value = phone;
+  hideSug();
+  document.getElementById('f_amount').focus();
+}
+function toggleCustomSize(p) {
+  const val = document.getElementById(p+'_size').value;
+  const box = document.getElementById(p+'_custom_size');
+  box.style.display = val === 'Custom' ? 'block' : 'none';
+  if(val !== 'Custom') document.getElementById(p+'_custom_size_val').value = '';
+}
+function hideSug() {
+  const sug = document.getElementById('custSug');
+  if (sug) sug.style.display = 'none';
+}
+function closeModal(id) {
+  document.getElementById(id+'Modal').classList.remove('open');
+  if(id === 'add'){
+    document.getElementById('f_custom_size').style.display='none';
+    document.getElementById('f_custom_size_val').value='';
+  }
+}
 // ─── ADD ORDER ────────────────────────────────────────────
 function addOrder() {
   const name = document.getElementById('f_name').value.trim();
@@ -371,7 +457,9 @@ function addOrder() {
   const advance = parseFloat(document.getElementById('f_advance').value) || 0;
   const o = {
     id: Date.now(), name, phone,
-    size: document.getElementById('f_size').value,
+    size: document.getElementById('f_size').value === 'Custom' ? document.getElementById('f_custom_size_val').value.trim() || 'Custom' : document.getElementById('f_size').value,
+    qty: parseInt(document.getElementById('f_qty').value) || 1,
+    ftype: document.getElementById('f_ftype').value,
     notes: document.getElementById('f_notes').value,
     status: 'New', amount, advance,
     balance: Math.max(0, amount - advance),
@@ -382,7 +470,8 @@ function addOrder() {
   pushToSheet(o);
   closeModal('add');
   ['f_name','f_phone','f_notes','f_amount','f_advance','f_balance'].forEach(i => document.getElementById(i).value = '');
-  render(); updateStats();
+ render(); updateStats();
+showAlert('New order added for ' + name + '!');
 }
 
 // ─── EDIT ORDER ───────────────────────────────────────────
@@ -391,7 +480,17 @@ function openEdit(idx) {
   document.getElementById('e_idx').value = idx;
   document.getElementById('e_name').value = o.name;
   document.getElementById('e_phone').value = o.phone;
+  const stdSizes = ['6×8','8×12','12×18','16×20','20×24','20×30'];
+if(stdSizes.includes(o.size)){
   document.getElementById('e_size').value = o.size;
+  document.getElementById('e_custom_size').style.display = 'none';
+} else {
+  document.getElementById('e_size').value = 'Custom';
+  document.getElementById('e_custom_size').style.display = 'block';
+  document.getElementById('e_custom_size_val').value = o.size;
+}
+  document.getElementById('e_qty').value = o.qty || 1;
+  document.getElementById('e_ftype').value = o.ftype || '1';
   document.getElementById('e_status').value = o.status;
   document.getElementById('e_notes').value = o.notes || '';
   document.getElementById('e_amount').value = o.amount || 0;
@@ -407,7 +506,9 @@ function saveEdit() {
     ...orders[idx],
     name:    document.getElementById('e_name').value,
     phone:   document.getElementById('e_phone').value,
-    size:    document.getElementById('e_size').value,
+size: document.getElementById('e_size').value === 'Custom' ? document.getElementById('e_custom_size_val').value.trim() || 'Custom' : document.getElementById('e_size').value,
+    qty: parseInt(document.getElementById('e_qty').value) || 1,
+    ftype: document.getElementById('e_ftype').value,
     status:  newStatus,
     notes:   document.getElementById('e_notes').value,
     amount:  parseFloat(document.getElementById('e_amount').value) || 0,
@@ -466,7 +567,7 @@ function render() {
     (!sf || o.status === sf)
   );
   if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:2.5rem;color:var(--text2);font-size:13px">No orders. Click "+ New Order" or sync from Google Sheet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:2.5rem;color:var(--text2);font-size:13px">No orders found. <span style="color:var(--accent);cursor:pointer;text-decoration:underline" onclick="syncFromSheet()">Click to sync from Google Sheet</span></td></tr>';
     return;
   }
   filtered.forEach(o => {
@@ -487,6 +588,8 @@ function render() {
         ${o.notes ? '<br><span style="font-size:11px;color:var(--text2)">' + o.notes.substring(0,38) + (o.notes.length>38?'…':'') + '</span>' : ''}</td>
       <td style="color:var(--text2)">${o.phone}</td>
       <td>${o.size}</td>
+      <td>${o.qty || 1}</td>
+      <td>${o.ftype || '1'}"</td>
       <td><span class="pill ${sc}">${o.status}</span></td>
       <td>₹${o.amount}</td>
       <td style="color:var(--green)">₹${o.advance}</td>
@@ -580,94 +683,23 @@ if (WEBHOOK_URL) {
 }
 render();
 updateStats();
-  // 🔐 AUTO LOCK SYSTEM
-let idleTimer, warningTimer, countdownTimer;
-let countdown = 10;
-
-// start idle timer
-function startIdleTimer(){
-  clearTimeout(idleTimer);
-  clearTimeout(warningTimer);
-  clearInterval(countdownTimer);
-
-  idleTimer = setTimeout(showWarning, (2 * 60 - 10) * 1000); // 1m50s
-}
-
-// show warning popup
-function showWarning(){
-  document.getElementById('lockWarning').style.display = 'block';
-  countdown = 10;
-  document.getElementById('countdown').textContent = countdown;
-
-  countdownTimer = setInterval(()=>{
-    countdown--;
-    document.getElementById('countdown').textContent = countdown;
-
-    if(countdown <= 0){
-      clearInterval(countdownTimer);
-      lockApp();
-    }
-  }, 1000);
-}
-
-// user clicks stay logged in
-function stayLoggedIn(){
-  document.getElementById('lockWarning').style.display = 'none';
-  startIdleTimer();
-}
-
-// lock app
-function lockApp(){
-  localStorage.removeItem('asf_auth');
-  location.reload();
-}
-
-// reset timer on activity
-['click','mousemove','keydown'].forEach(e=>{
-  document.addEventListener(e, ()=>{
-    document.getElementById('lockWarning').style.display = 'none';
-    startIdleTimer();
-  });
-});
-
-// start timer if already logged in
-if(localStorage.getItem('asf_auth') === '1'){
-  startIdleTimer();
-}
 </script>
 </div>
 
 <script>
-function checkPw(){
-  const val = document.getElementById('pwInput').value;
-
-  if(val === 'Asframes@2024'){
-    document.getElementById('lockScreen').style.display = 'none';
-    localStorage.setItem('asf_auth', '1');
-    startIdleTimer();
-  } else {
-    document.getElementById('pwError').style.display = 'block';
-    document.getElementById('pwInput').value = '';
-    document.getElementById('pwInput').focus();
-  }
-}
-
-// Auto login
-if(localStorage.getItem('asf_auth') === '1'){
-  document.getElementById('lockScreen').style.display = 'none';
-  startIdleTimer(); 
-}
   function logout(){
+  if(!confirm('Logout from AS Frames?')) return;
   localStorage.removeItem('asf_auth');
-
-  // hide warning popup if visible
-  const warn = document.getElementById('lockWarning');
-  if(warn) warn.style.display = 'none';
-
-  location.reload();
+  document.getElementById('lockScreen').style.display='flex';
+}
+function logout(){
+  if(!confirm('Logout from AS Frames?')) return;
+  localStorage.removeItem('asf_auth');
+  document.getElementById('lockScreen').style.display='flex';
+  document.getElementById('pwInput').value='';
+  document.getElementById('pwError').style.display='none';
 }
 </script>
-
 <!-- Customer Khata Modal -->
 <div class="overlay" id="khataModal">
 <div class="modal" style="max-width:620px">
@@ -700,6 +732,7 @@ function openKhata(){
       orders = [...data.orders.map(o => ({...o, lastMsg:o.lastMsg||null, created:o.created||Date.now(), fromPortal:o.fromPortal||false})), ...localOnly];
       saveLocal();
       render(); updateStats();
+      if(WEBHOOK_URL) syncFromSheet();
     }
     document.getElementById('khataResults').innerHTML='<p style="color:var(--text2);font-size:13px;text-align:center;padding:1rem">✅ '+orders.length+' orders loaded. Enter name or phone and click Search</p>';
     document.getElementById('khataSearch').focus();
@@ -800,13 +833,4 @@ function doKhataSearch(){
   resultsDiv.innerHTML = html;
 }
 </script>
-  <div id="lockWarning" style="display:none;position:fixed;bottom:20px;right:20px;background:#fff;border:1px solid #ddd;border-radius:12px;padding:15px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.2)">
-  <div style="font-weight:600;margin-bottom:5px">⚠️ Session Expiring</div>
-  <div style="font-size:13px;margin-bottom:10px">
-    Locking in <span id="countdown">10</span> seconds...
-  </div>
-  <button onclick="stayLoggedIn()" style="padding:6px 12px;background:#D85A30;color:#fff;border:none;border-radius:6px;cursor:pointer">
-    Stay Logged In
-  </button>
-</div>
 </body>

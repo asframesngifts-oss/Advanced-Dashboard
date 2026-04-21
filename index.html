@@ -688,7 +688,7 @@ if (WEBHOOK_URL) {
 }
 render();
 updateStats();
-  if(WEBHOOK_URL) syncFromSheet();
+  if(WEBHOOK_URL && sessionStorage.getItem('asf_auth')==='1') syncFromSheet();
 </script>
 </div>
 
